@@ -1,5 +1,5 @@
 BIN := sentiment
 all:
-	gcc -o $(BIN) sentiment.c
+	gcc -g -o $(BIN) trie/trie.c sentiment.c
 clean:
 	$(RM) $(BIN)
