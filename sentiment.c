@@ -20,6 +20,7 @@ typedef struct {
 
 typedef struct {
     char *word;
+    int count;
     cat_link *cats;
 } word_tag;
 
@@ -79,6 +80,7 @@ struct trie *make_trie(char ***cats, int cat_count, int *word_counts) {
                 t = (word_tag *)malloc(sizeof(word_tag));
                 t->word = words[j];
                 t->cats = NULL;
+                t->count = 0;
             }
             cat_link *c = add_cat(t->cats, current_cat);
             t->cats = c;
@@ -129,6 +131,12 @@ void lowercase(char *str) {
     }
 }
 
+int visitor(const char * key, void * data, void *arg) {
+    word_tag *t = (word_tag *) data;
+    printf("%s::%s::%d\n", t->cats->category, t->word, t->count);
+    return 0;
+}
+
 int main() {
     char *current_line = NULL;
     char **words = NULL;
@@ -166,10 +174,11 @@ int main() {
             current_word = trim_space(word_buf);
             t = (word_tag *)trie_search(main_trie, current_word);
             if (t != NULL) {
-                printf("%s::%s\n", t->cats->category, current_word);
+                t->count++;
             }
         }
     } while (scan_amt > 0);
+    trie_visit(main_trie, "", visitor, NULL);
 
     return 0;
 }
