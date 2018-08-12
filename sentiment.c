@@ -14,6 +14,11 @@ typedef struct {
 } cat_link;
 
 typedef struct {
+    char *category;
+    int count;
+} cat_count;
+
+typedef struct {
     char *word;
     int count;
     cat_link *cats;
@@ -65,7 +70,6 @@ struct trie *make_trie(char ***cats, int cat_count, int *word_counts) {
     int word_count;
     char *current_cat = NULL;
     word_tag *t;
-    // cat_link * cl = NULL;
 
     for (int i = 0; i < cat_count; i = i + 1) {
         words = cats[i];
@@ -88,13 +92,6 @@ struct trie *make_trie(char ***cats, int cat_count, int *word_counts) {
                 fprintf(stderr, "Failed to insert into trie\n");
                 exit(1);
             }
-            /* printf("%s: ", t->word); */
-            /* cl = t->cats; */
-            /* while(cl != NULL && cl->category != NULL) { */
-            /*   printf("%s ", cl->category); */
-            /*   cl = (cat_link *) cl->next; */
-            /* } */
-            /* printf("\n"); */
         }
     }
     return main_trie;
@@ -131,11 +128,20 @@ void lowercase(char *str) {
     }
 }
 
-int visitor(const char *key, void *data, void *arg) {
+int visitor(const char *key, void *data, void *cats) {
     (void)key;
-    (void)arg;
+    cat_count *c = (cat_count *)cats;
     word_tag *t = (word_tag *)data;
-    printf("%s::%s::%d\n", t->cats->category, t->word, t->count);
+    cat_link *n = (cat_link *)t->cats;
+    do {
+        for (int i = 0; i < MAX_CATEGORIES; i = i + 1) {
+            if (strcmp(c[i].category, n->category) == 0) {
+                c[i].count += t->count;
+                break;
+            }
+        }
+        n = (cat_link *)n->next;
+    } while (n != NULL);
     return 0;
 }
 
@@ -148,6 +154,8 @@ int main() {
     FILE *cat_file = fopen("empath/empath/data/categories.tsv", "r");
     struct trie *main_trie = NULL;
     word_tag *t = NULL;
+    cat_count *c = (cat_count *)calloc(MAX_CATEGORIES, sizeof(cat_count));
+    cat_count *cur_cat = NULL;
 
     if (cat_file == NULL) {
         fprintf(stderr, "Missing Category Datafile\n");
@@ -159,6 +167,10 @@ int main() {
         if (current_line != NULL) {
             words = get_words(current_line, &(word_counts[cat_index]));
             categories[cat_index] = words;
+            cur_cat = (cat_count *)malloc(sizeof(cat_count));
+            cur_cat->category = words[0]; // hopefully it's there
+            cur_cat->count = 0;
+            c[cat_index] = *cur_cat;
             cat_index++;
         }
     } while (current_line != NULL);
@@ -169,6 +181,7 @@ int main() {
     char word_buf[MAX_WORD_SIZE];
     int scan_amt = 0;
     char *current_word = NULL;
+
     do {
         scan_amt = scanf("%s", word_buf);
         if (scan_amt > 0) {
@@ -180,7 +193,12 @@ int main() {
             }
         }
     } while (scan_amt > 0);
-    trie_visit(main_trie, "", visitor, NULL);
+
+    trie_visit(main_trie, "", visitor, c);
+
+    for (int i = 0; i < cat_index; i = i + 1) {
+        printf("%s --- %d\n", c[i].category, c[i].count);
+    }
 
     return 0;
 }
