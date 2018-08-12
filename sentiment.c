@@ -1,10 +1,12 @@
 #include "trie/trie.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #define MAX_LINE_LENGTH 8192
 #define MAX_CATEGORIES 1024
+#define MAX_WORD_SIZE 1024
 
 char *get_line(FILE *s) {
     char *line = (char *)calloc(MAX_LINE_LENGTH, sizeof(char));
@@ -96,6 +98,37 @@ struct trie *make_trie(char ***cats, int cat_count, int *word_counts) {
     return main_trie;
 }
 
+char *trim_space(char *str) {
+    char *end;
+
+    // Trim leading space
+    while (isspace((unsigned char)*str)) {
+        str++;
+    }
+
+    if (*str == 0) {
+        return str;
+    }
+
+    // Trim trailing space
+    end = str + strlen(str) - 1;
+    while (end > str && !isalpha((unsigned char)*end)) {
+        end--;
+    }
+
+    // Write new null terminator character
+    end[1] = '\0';
+
+    return str;
+}
+
+void lowercase(char *str) {
+    size_t len = strlen(str);
+    for (size_t i = 0; i < len; i = i + 1) {
+        str[i] = tolower(str[i]);
+    }
+}
+
 int main() {
     char *current_line = NULL;
     char **words = NULL;
@@ -104,6 +137,7 @@ int main() {
     int cat_index = 0;
     FILE *cat_file = fopen("categories.tsv", "r");
     struct trie *main_trie = NULL;
+    word_tag *t = NULL;
 
     if (cat_file == NULL) {
         fprintf(stderr, "Missing Category Datafile\n");
@@ -121,5 +155,21 @@ int main() {
     main_trie = make_trie(categories, cat_index, word_counts);
     fprintf(stderr, "Tree loaded\nTree Count: %zd\nTrie Size: %zd\n ",
             trie_count(main_trie, ""), trie_size(main_trie));
+
+    char word_buf[MAX_WORD_SIZE];
+    int scan_amt = 0;
+    char *current_word = NULL;
+    do {
+        scan_amt = scanf("%s", word_buf);
+        if (scan_amt > 0) {
+            lowercase(word_buf);
+            current_word = trim_space(word_buf);
+            t = (word_tag *)trie_search(main_trie, current_word);
+            if (t != NULL) {
+                printf("%s::%s\n", t->cats->category, current_word);
+            }
+        }
+    } while (scan_amt > 0);
+
     return 0;
 }
