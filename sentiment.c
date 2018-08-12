@@ -61,7 +61,7 @@ struct trie * make_trie( char *** cats, int cat_count, int * word_counts) {
   int word_count;
   char * current_cat = NULL;
   word_tag * t;
-  cat_link * cl = NULL;
+  // cat_link * cl = NULL;
 
   for (int i = 0; i < cat_count; i = i + 1) {
     words = cats[i];
@@ -83,20 +83,19 @@ struct trie * make_trie( char *** cats, int cat_count, int * word_counts) {
         fprintf(stderr, "Failed to insert into trie\n");
         exit(1);
       }
-      printf("%s: ", t->word);
-      cl = t->cats;
-      while(cl != NULL && cl->category != NULL) {
-        printf("%s ", cl->category);
-        cl = (cat_link *) cl->next;
-      }
-      printf("\n");
-
+      /* printf("%s: ", t->word); */
+      /* cl = t->cats; */
+      /* while(cl != NULL && cl->category != NULL) { */
+      /*   printf("%s ", cl->category); */
+      /*   cl = (cat_link *) cl->next; */
+      /* } */
+      /* printf("\n"); */
     }
   }
   return main_trie;
 }
 
-void main(int arc, char ** argv) {
+int main() {
   char * current_line = NULL;
   char ** words = NULL;
   int * word_counts = (int*) calloc(MAX_CATEGORIES, sizeof(char**));
@@ -120,6 +119,6 @@ void main(int arc, char ** argv) {
   } while(current_line != NULL);
   main_trie = make_trie(categories, cat_index, word_counts);
   fprintf(stderr, "Tree loaded\nTree Count: %zd\nTrie Size: %zd\n ", trie_count(main_trie, ""), trie_size(main_trie));
-  exit(0);
+  return 0;
 }
 
