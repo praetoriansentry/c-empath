@@ -8,11 +8,6 @@
 #define MAX_CATEGORIES 1024
 #define MAX_WORD_SIZE 1024
 
-char *get_line(FILE *s) {
-    char *line = (char *)calloc(MAX_LINE_LENGTH, sizeof(char));
-    return fgets(line, MAX_LINE_LENGTH, s);
-}
-
 typedef struct {
     char *category;
     struct cat_link *next;
@@ -23,6 +18,11 @@ typedef struct {
     int count;
     cat_link *cats;
 } word_tag;
+
+char *get_line(FILE *s) {
+    char *line = (char *)calloc(MAX_LINE_LENGTH, sizeof(char));
+    return fgets(line, MAX_LINE_LENGTH, s);
+}
 
 char **get_words(char *line, int *index) {
     int num_words = 0;
@@ -131,8 +131,10 @@ void lowercase(char *str) {
     }
 }
 
-int visitor(const char * key, void * data, void *arg) {
-    word_tag *t = (word_tag *) data;
+int visitor(const char *key, void *data, void *arg) {
+    (void)key;
+    (void)arg;
+    word_tag *t = (word_tag *)data;
     printf("%s::%s::%d\n", t->cats->category, t->word, t->count);
     return 0;
 }
@@ -143,7 +145,7 @@ int main() {
     int *word_counts = (int *)calloc(MAX_CATEGORIES, sizeof(char **));
     char ***categories = (char ***)calloc(MAX_CATEGORIES, sizeof(char **));
     int cat_index = 0;
-    FILE *cat_file = fopen("categories.tsv", "r");
+    FILE *cat_file = fopen("empath/empath/data/categories.tsv", "r");
     struct trie *main_trie = NULL;
     word_tag *t = NULL;
 
