@@ -173,8 +173,8 @@ void lowercase(char *str) {
 // function takes data which is a word_tag and cats which is a
 // collection of all of the cat_counts. While walking the trie, we'll
 // update the aggregate counts.
-int count_category_visitor (const char *key, void *data, void *cats) {
-    (void) key; // avoid compiler warnings
+int count_category_visitor(const char *key, void *data, void *cats) {
+    (void)key; // avoid compiler warnings
     cat_count *c = (cat_count *)cats;
     word_tag *t = (word_tag *)data;
     cat_link *n = (cat_link *)t->cats;
@@ -201,10 +201,10 @@ int main() {
     char **words = NULL;
     int *word_counts = (int *)calloc(MAX_CATEGORIES, sizeof(char **));
     char ***categories = (char ***)calloc(MAX_CATEGORIES, sizeof(char **));
+    cat_count *c = (cat_count *)calloc(MAX_CATEGORIES, sizeof(cat_count));
     int cat_index = 0;
     struct trie *main_trie = NULL;
     word_tag *t = NULL;
-    cat_count *c = (cat_count *)calloc(MAX_CATEGORIES, sizeof(cat_count));
     cat_count *cur_cat = NULL;
 
     // open the list of categories. I should probably make tihs an
@@ -232,7 +232,8 @@ int main() {
     // Should be safe to close the file now
     fclose(cat_file);
 
-    // after reading all of the data from the file, we'll make our advanced data type
+    // after reading all of the data from the file, we'll make our advanced data
+    // type
     main_trie = make_trie(categories, cat_index, word_counts);
 
     // print out some basic information about the parsed trie
@@ -262,7 +263,7 @@ int main() {
     // every node in the trie and count all of the cateogires.
     trie_visit(main_trie, "", count_category_visitor, c);
 
-    // print out the basics 
+    // print out the basics
     for (int i = 0; i < cat_index; i = i + 1) {
         printf("%s --- %d\n", c[i].category, c[i].count);
     }
