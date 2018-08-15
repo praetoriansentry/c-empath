@@ -237,7 +237,7 @@ int main() {
     main_trie = make_trie(categories, cat_index, word_counts);
 
     // print out some basic information about the parsed trie
-    fprintf(stderr, "Tree loaded\nTree Count: %zd\nTrie Size: %zd\n ",
+    fprintf(stderr, "Tree loaded\nTree Count: %zd\nTrie Size: %zd\n",
             trie_count(main_trie, ""), trie_size(main_trie));
 
     char word_buf[MAX_WORD_SIZE];
@@ -265,7 +265,7 @@ int main() {
 
     // print out the basics
     for (int i = 0; i < cat_index; i = i + 1) {
-        printf("%s --- %d\n", c[i].category, c[i].count);
+        printf("%s\t\t%d\n", c[i].category, c[i].count);
     }
 
     return 0;
