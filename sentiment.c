@@ -74,6 +74,25 @@ char **get_words(char *line, int *index) {
     }
     return words;
 }
+int strcmp_wild(char * a, char * b) {
+    int i = 0;
+    while (1) {
+        // exact string match
+        if (a[i] == '\0' && b[i] == '\0') {
+            return 0;
+        }
+        // wild card match
+        if (a[i] == '*' || b[i] == '*') {
+            return 0;
+        }
+        // mismatch
+        if (a[i] != b[i]) {
+            return 1;
+        }
+        // check further
+        i = i + 1;
+    }
+}
 
 // add_cat will take a cat_link and a new category and prepend it to
 // the beginning of the linked list.
@@ -85,7 +104,7 @@ cat_link *add_cat(cat_link *link, char *category) {
 }
 word_tag* find_word_linear(word_tag** word_tags, int word_count, char * term) {
     for(int i = 0; i < word_count; i = i + 1) {
-        if (strcmp(word_tags[i]->word, term) == 0) {
+        if (strcmp_wild(word_tags[i]->word, term) == 0) {
             return word_tags[i];
         }
     }
@@ -95,7 +114,7 @@ word_tag* find_word(word_tag** word_tags, int word_count, char * term) {
     int i = 0, j = word_count - 1;
     while (i <= j) {
         int k = (i + j) / 2;
-        if (strcmp(word_tags[k]->word, term) == 0) {
+        if (strcmp_wild(word_tags[k]->word, term) == 0) {
             return word_tags[k];
         } else if (strcmp(word_tags[k]->word, term) < 0) {
             i = k + 1;
@@ -105,6 +124,7 @@ word_tag* find_word(word_tag** word_tags, int word_count, char * term) {
     }
     return NULL;
 }
+
 
 word_tag** make_word_tags(char ***cats, int cat_count, int *word_counts, int * uniq_word_count) {
     int total_word_count = 0;
@@ -267,7 +287,7 @@ int main() {
         if (scan_amt > 0) {
             lowercase(word_buf);
             current_word = trim_space(word_buf);
-            t = (word_tag *)find_word(word_tags, unique_word_count, current_word);
+            t = (word_tag *)find_word_linear(word_tags, unique_word_count, current_word);
             if (t != NULL) {
                 t->count++;
             }
