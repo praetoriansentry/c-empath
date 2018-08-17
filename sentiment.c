@@ -1,4 +1,3 @@
-#include "trie/trie.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -84,12 +83,35 @@ cat_link *add_cat(cat_link *link, char *category) {
     c->next = (struct cat_link *)link;
     return c;
 }
+word_tag* find_word_linear(word_tag** word_tags, int word_count, char * term) {
+    for(int i = 0; i < word_count; i = i + 1) {
+        if (strcmp(word_tags[i]->word, term) == 0) {
+            return word_tags[i];
+        }
+    }
+    return NULL;
+}
+word_tag* find_word(word_tag** word_tags, int word_count, char * term) {
+    int i = 0, j = word_count - 1;
+    while (i <= j) {
+        int k = (i + j) / 2;
+        if (strcmp(word_tags[k]->word, term) == 0) {
+            return word_tags[k];
+        } else if (strcmp(word_tags[k]->word, term) < 0) {
+            i = k + 1;
+        } else {
+            j = k - 1;
+        }
+    }
+    return NULL;
+}
 
-// make_trie will take a list of all of the catgories and build a trie
-// used to do rapid lookups of all of the words in our sample text;
-struct trie *make_trie(char ***cats, int cat_count, int *word_counts) {
-    // allocate space for the trie
-    struct trie *main_trie = trie_create();
+word_tag** make_word_tags(char ***cats, int cat_count, int *word_counts, int * uniq_word_count) {
+    int total_word_count = 0;
+    for (int i = 0; i < cat_count; i = i + 1){
+        total_word_count += word_counts[i];
+    }
+    word_tag** word_tags = (word_tag**)calloc(total_word_count, sizeof (word_tag*));
 
     char **words = NULL;
     int word_count;
@@ -105,12 +127,15 @@ struct trie *make_trie(char ***cats, int cat_count, int *word_counts) {
                 continue;
             }
             // Check to see if the word exists in our trie
-            t = (word_tag *)trie_search(main_trie, words[j]);
+            t = (word_tag *)find_word_linear(word_tags, *uniq_word_count, words[j]);
             if (t == NULL) {
+
                 // if the word doesn't exist, we'll allocate new space
                 // for the word_tag and initalize it with the word, no
                 // categories, and no count
                 t = (word_tag *)malloc(sizeof(word_tag));
+                word_tags[*uniq_word_count] = t;
+                *uniq_word_count += 1;
                 t->word = words[j];
                 t->cats = NULL;
                 t->count = 0;
@@ -120,15 +145,9 @@ struct trie *make_trie(char ***cats, int cat_count, int *word_counts) {
             // c would have be prepended with the new cateogry, we'll
             // overwrite the pointer within the word_tag
             t->cats = c;
-            // trie_insert should overwrite the particular value
-            // associated with the key
-            if (trie_insert(main_trie, words[j], t) != 0) {
-                fprintf(stderr, "Failed to insert into trie\n");
-                exit(1);
-            }
         }
     }
-    return main_trie;
+    return word_tags;
 }
 
 // trim_space will return a new pointer to a string that has been
@@ -203,7 +222,7 @@ int main() {
     char ***categories = (char ***)calloc(MAX_CATEGORIES, sizeof(char **));
     cat_count *c = (cat_count *)calloc(MAX_CATEGORIES, sizeof(cat_count));
     int cat_index = 0;
-    struct trie *main_trie = NULL;
+    word_tag** word_tags = NULL;
     word_tag *t = NULL;
     cat_count *cur_cat = NULL;
 
@@ -232,13 +251,9 @@ int main() {
     // Should be safe to close the file now
     fclose(cat_file);
 
-    // after reading all of the data from the file, we'll make our advanced data
-    // type
-    main_trie = make_trie(categories, cat_index, word_counts);
-
-    // print out some basic information about the parsed trie
-    fprintf(stderr, "Tree loaded\nTree Count: %zd\nTrie Size: %zd\n",
-            trie_count(main_trie, ""), trie_size(main_trie));
+    int unique_word_count = 0;
+    word_tags = make_word_tags(categories, cat_index, word_counts, &unique_word_count);
+    printf("unique words in dictionary: %d\n", unique_word_count);
 
     char word_buf[MAX_WORD_SIZE];
     int scan_amt = 0;
@@ -252,16 +267,27 @@ int main() {
         if (scan_amt > 0) {
             lowercase(word_buf);
             current_word = trim_space(word_buf);
-            t = (word_tag *)trie_search(main_trie, current_word);
+            t = (word_tag *)find_word(word_tags, unique_word_count, current_word);
             if (t != NULL) {
                 t->count++;
             }
         }
     } while (scan_amt > 0);
 
-    // All of the words have been counted from the stdin, we'll visit
-    // every node in the trie and count all of the cateogires.
-    trie_visit(main_trie, "", count_category_visitor, c);
+    for(int i = 0; i < unique_word_count; i = i + 1) {
+        cat_link *n = (cat_link*) word_tags[i]->cats;
+        do {
+            for (int j = 0; j < cat_index; j = j + 1) {
+                if (strcmp(c[j].category, n->category) == 0) {
+                    c[j].count += word_tags[i]->count;
+                    break;
+                }
+            }
+            // Move to the next node in the linked list
+            n = (cat_link *)n->next;
+        } while (n != NULL);
+
+    }
 
     // print out the basics
     for (int i = 0; i < cat_index; i = i + 1) {
