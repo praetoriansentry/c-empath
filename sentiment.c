@@ -164,7 +164,7 @@ word_tag **make_word_tags(char ***cats, int cat_count, int *word_counts,
                 continue;
             }
 
-            // Check to see if the word exists in our trie
+            // Check to see if the word exists in our array
             t = (word_tag *)find_word_linear(word_tags, *uniq_word_count,
                                              words[j]);
             if (t == NULL) {
@@ -286,8 +286,8 @@ int main() {
     int matched_word_count = 0;
 
     // At this point, all of the initialization is complete. We'll
-    // scan stdin word by workd and do lookups in our trie. If the
-    // word_tag is found, we'll increment the count
+    // scan stdin word by workd and do lookups in our sorted array. If
+    // the word_tag is found, we'll increment the count
     scan_amt = scanf("%s", word_buf);
     while (scan_amt > 0) {
         scanned_word_count++;
