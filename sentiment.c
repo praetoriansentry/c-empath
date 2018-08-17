@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_LINE_LENGTH 8192
+#define MAX_LINE_LENGTH 16384
 #define MAX_CATEGORIES 1024
 #define MAX_WORD_SIZE 1024
 
@@ -74,6 +74,10 @@ char **get_words(char *line, int *index) {
     }
     return words;
 }
+
+// strcmp_wild will compare two strings for equality. The difference
+// here is tha if a string has "*" it in, that character will serve as
+// a wild card for the rest of the string
 int strcmp_wild(char *a, char *b) {
     int i = 0;
     while (1) {
@@ -91,6 +95,11 @@ int strcmp_wild(char *a, char *b) {
         }
         // check further
         i = i + 1;
+        if (i > MAX_WORD_SIZE) {
+            fprintf(stderr,
+                    "Max word size exceeded while doing strcmp_wild check");
+            exit(1);
+        }
     }
 }
 
@@ -103,6 +112,9 @@ cat_link *add_cat(cat_link *link, char *category) {
     return c;
 }
 
+// find_word_linear will do a linear search of the current words in
+// our collection. This is necessary before we sort the collection of
+// words
 word_tag *find_word_linear(word_tag **word_tags, int word_count, char *term) {
     for (int i = 0; i < word_count; i = i + 1) {
         if (strcmp_wild(word_tags[i]->word, term) == 0) {
@@ -111,6 +123,8 @@ word_tag *find_word_linear(word_tag **word_tags, int word_count, char *term) {
     }
     return NULL;
 }
+
+// find_word will doe a binary search within the set of word tags
 word_tag *find_word(word_tag **word_tags, int word_count, char *term) {
     int i = 0, j = word_count - 1;
     while (i <= j) {
@@ -126,6 +140,7 @@ word_tag *find_word(word_tag **word_tags, int word_count, char *term) {
     return NULL;
 }
 
+// make_word_tags will initialize the set of all word tags
 word_tag **make_word_tags(char ***cats, int cat_count, int *word_counts,
                           int *uniq_word_count) {
     int total_word_count = 0;
@@ -210,38 +225,14 @@ void lowercase(char *str) {
     }
 }
 
-// count_category_visitor implements a trie interface which is used as
-// a callback while walking the trie. In this particular case, the
-// function takes data which is a word_tag and cats which is a
-// collection of all of the cat_counts. While walking the trie, we'll
-// update the aggregate counts.
-int count_category_visitor(const char *key, void *data, void *cats) {
-    (void)key; // avoid compiler warnings
-    cat_count *c = (cat_count *)cats;
-    word_tag *t = (word_tag *)data;
-    cat_link *n = (cat_link *)t->cats;
-
-    // for each cat_link we'll search all of the categories for a match category
-    do {
-        for (int i = 0; i < MAX_CATEGORIES; i = i + 1) {
-            // When we find a matching category, we'll increment it's
-            // aggregate count with the number of times that the word
-            // has been seen
-            if (strcmp(c[i].category, n->category) == 0) {
-                c[i].count += t->count;
-                break;
-            }
-        }
-        // Move to the next node in the linked list
-        n = (cat_link *)n->next;
-    } while (n != NULL);
-    return 0;
-}
+// word_tag_cmp will compare two word_tags. Used to sort the full
+// collection
 int word_tag_cmp(const void *a, const void *b) {
     word_tag **ta = (word_tag **)a;
     word_tag **tb = (word_tag **)b;
     return strcmp((*ta)->word, (*tb)->word);
 }
+
 int main() {
     char *current_line = NULL;
     char **words = NULL;
@@ -281,32 +272,37 @@ int main() {
     int unique_word_count = 0;
     word_tags =
         make_word_tags(categories, cat_index, word_counts, &unique_word_count);
-    printf("unique words in dictionary: %d\n", unique_word_count);
+    fprintf(stderr, "unique words in dictionary: %d\n", unique_word_count);
+    fprintf(stderr, "unique categories in dictionary: %d\n", cat_index);
+    fprintf(stderr, "sorting dictionary\n");
     qsort(word_tags, unique_word_count, sizeof(word_tag **), word_tag_cmp);
-
-    for (int i = 0; i < unique_word_count; i = i + 1) {
-        fprintf(stderr, "%s\n", word_tags[i]->word);
-    }
+    fprintf(stderr, "finished sorting\n");
 
     char word_buf[MAX_WORD_SIZE];
     int scan_amt = 0;
     char *current_word = NULL;
 
+    int scanned_word_count = 0;
+    int matched_word_count = 0;
+
     // At this point, all of the initialization is complete. We'll
     // scan stdin word by workd and do lookups in our trie. If the
     // word_tag is found, we'll increment the count
-    do {
-        scan_amt = scanf("%s", word_buf);
-        if (scan_amt > 0) {
-            lowercase(word_buf);
-            current_word = trim_space(word_buf);
-            t = (word_tag *)find_word(word_tags, unique_word_count,
-                                      current_word);
-            if (t != NULL) {
-                t->count++;
-            }
+    scan_amt = scanf("%s", word_buf);
+    while (scan_amt > 0) {
+        scanned_word_count++;
+        lowercase(word_buf);
+        current_word = trim_space(word_buf);
+        t = (word_tag *)find_word(word_tags, unique_word_count, current_word);
+        if (t != NULL) {
+            matched_word_count++;
+            t->count++;
         }
-    } while (scan_amt > 0);
+        scan_amt = scanf("%s", word_buf);
+    }
+
+    fprintf(stderr, "Total words scanned: %d\n", scanned_word_count);
+    fprintf(stderr, "Total words matched: %d\n", matched_word_count);
 
     for (int i = 0; i < unique_word_count; i = i + 1) {
         cat_link *n = (cat_link *)word_tags[i]->cats;
@@ -324,7 +320,7 @@ int main() {
 
     // print out the basics
     for (int i = 0; i < cat_index; i = i + 1) {
-        printf("%s\t\t%d\n", c[i].category, c[i].count);
+        printf("%-20s%d\n", c[i].category, c[i].count);
     }
 
     return 0;
