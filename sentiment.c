@@ -74,7 +74,7 @@ char **get_words(char *line, int *index) {
     }
     return words;
 }
-int strcmp_wild(char * a, char * b) {
+int strcmp_wild(char *a, char *b) {
     int i = 0;
     while (1) {
         // exact string match
@@ -103,15 +103,15 @@ cat_link *add_cat(cat_link *link, char *category) {
     return c;
 }
 
-word_tag* find_word_linear(word_tag** word_tags, int word_count, char * term) {
-    for(int i = 0; i < word_count; i = i + 1) {
+word_tag *find_word_linear(word_tag **word_tags, int word_count, char *term) {
+    for (int i = 0; i < word_count; i = i + 1) {
         if (strcmp_wild(word_tags[i]->word, term) == 0) {
             return word_tags[i];
         }
     }
     return NULL;
 }
-word_tag* find_word(word_tag** word_tags, int word_count, char * term) {
+word_tag *find_word(word_tag **word_tags, int word_count, char *term) {
     int i = 0, j = word_count - 1;
     while (i <= j) {
         int k = (i + j) / 2;
@@ -126,13 +126,14 @@ word_tag* find_word(word_tag** word_tags, int word_count, char * term) {
     return NULL;
 }
 
-
-word_tag** make_word_tags(char ***cats, int cat_count, int *word_counts, int * uniq_word_count) {
+word_tag **make_word_tags(char ***cats, int cat_count, int *word_counts,
+                          int *uniq_word_count) {
     int total_word_count = 0;
-    for (int i = 0; i < cat_count; i = i + 1){
+    for (int i = 0; i < cat_count; i = i + 1) {
         total_word_count += word_counts[i];
     }
-    word_tag** word_tags = (word_tag**)calloc(total_word_count, sizeof (word_tag*));
+    word_tag **word_tags =
+        (word_tag **)calloc(total_word_count, sizeof(word_tag *));
 
     char **words = NULL;
     int word_count;
@@ -149,7 +150,8 @@ word_tag** make_word_tags(char ***cats, int cat_count, int *word_counts, int * u
             }
 
             // Check to see if the word exists in our trie
-            t = (word_tag *)find_word_linear(word_tags, *uniq_word_count, words[j]);
+            t = (word_tag *)find_word_linear(word_tags, *uniq_word_count,
+                                             words[j]);
             if (t == NULL) {
                 // if the word doesn't exist, we'll allocate new space
                 // for the word_tag and initalize it with the word, no
@@ -235,9 +237,9 @@ int count_category_visitor(const char *key, void *data, void *cats) {
     } while (n != NULL);
     return 0;
 }
-int word_tag_cmp(const void * a, const void * b) {
-    word_tag ** ta = (word_tag **) a;
-    word_tag ** tb = (word_tag **) b;
+int word_tag_cmp(const void *a, const void *b) {
+    word_tag **ta = (word_tag **)a;
+    word_tag **tb = (word_tag **)b;
     return strcmp((*ta)->word, (*tb)->word);
 }
 int main() {
@@ -247,7 +249,7 @@ int main() {
     char ***categories = (char ***)calloc(MAX_CATEGORIES, sizeof(char **));
     cat_count *c = (cat_count *)calloc(MAX_CATEGORIES, sizeof(cat_count));
     int cat_index = 0;
-    word_tag** word_tags = NULL;
+    word_tag **word_tags = NULL;
     word_tag *t = NULL;
     cat_count *cur_cat = NULL;
 
@@ -277,11 +279,12 @@ int main() {
     fclose(cat_file);
 
     int unique_word_count = 0;
-    word_tags = make_word_tags(categories, cat_index, word_counts, &unique_word_count);
+    word_tags =
+        make_word_tags(categories, cat_index, word_counts, &unique_word_count);
     printf("unique words in dictionary: %d\n", unique_word_count);
-    qsort(word_tags, unique_word_count, sizeof(word_tag**), word_tag_cmp);
+    qsort(word_tags, unique_word_count, sizeof(word_tag **), word_tag_cmp);
 
-    for(int i = 0; i < unique_word_count; i = i  + 1){
+    for (int i = 0; i < unique_word_count; i = i + 1) {
         fprintf(stderr, "%s\n", word_tags[i]->word);
     }
 
@@ -297,15 +300,16 @@ int main() {
         if (scan_amt > 0) {
             lowercase(word_buf);
             current_word = trim_space(word_buf);
-            t = (word_tag *)find_word(word_tags, unique_word_count, current_word);
+            t = (word_tag *)find_word(word_tags, unique_word_count,
+                                      current_word);
             if (t != NULL) {
                 t->count++;
             }
         }
     } while (scan_amt > 0);
 
-    for(int i = 0; i < unique_word_count; i = i + 1) {
-        cat_link *n = (cat_link*) word_tags[i]->cats;
+    for (int i = 0; i < unique_word_count; i = i + 1) {
+        cat_link *n = (cat_link *)word_tags[i]->cats;
         do {
             for (int j = 0; j < cat_index; j = j + 1) {
                 if (strcmp(c[j].category, n->category) == 0) {
@@ -316,7 +320,6 @@ int main() {
             // Move to the next node in the linked list
             n = (cat_link *)n->next;
         } while (n != NULL);
-
     }
 
     // print out the basics
