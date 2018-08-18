@@ -32,6 +32,11 @@ typedef struct {
     cat_link *cats;
 } word_tag;
 
+word_tag **word_tags = NULL;
+int unique_word_count = 0;
+int cat_index = 0;
+cat_count *cat_counts = NULL;
+
 // get_line will read a line of MAX_LINE_LENGTH from the provided file
 char *get_line(FILE *s) {
     char *line = (char *)calloc(MAX_LINE_LENGTH, sizeof(char));
@@ -233,15 +238,18 @@ int word_tag_cmp(const void *a, const void *b) {
     return strcmp((*ta)->word, (*tb)->word);
 }
 
-int main() {
+void init() {
+    // Globals
+    word_tags = NULL;
+    unique_word_count = 0;
+    cat_counts = (cat_count *)calloc(MAX_CATEGORIES, sizeof(cat_count));
+
     char *current_line = NULL;
     char **words = NULL;
     int *word_counts = (int *)calloc(MAX_CATEGORIES, sizeof(char **));
     char ***categories = (char ***)calloc(MAX_CATEGORIES, sizeof(char **));
-    cat_count *c = (cat_count *)calloc(MAX_CATEGORIES, sizeof(cat_count));
-    int cat_index = 0;
-    word_tag **word_tags = NULL;
-    word_tag *t = NULL;
+
+    cat_index = 0;
     cat_count *cur_cat = NULL;
 
     // open the list of categories. I should probably make tihs an
@@ -261,7 +269,7 @@ int main() {
             cur_cat = (cat_count *)malloc(sizeof(cat_count));
             cur_cat->category = words[0]; // hopefully it's there
             cur_cat->count = 0;
-            c[cat_index] = *cur_cat;
+            cat_counts[cat_index] = *cur_cat;
             cat_index++;
         }
     } while (current_line != NULL);
@@ -269,7 +277,7 @@ int main() {
     // Should be safe to close the file now
     fclose(cat_file);
 
-    int unique_word_count = 0;
+
     word_tags =
         make_word_tags(categories, cat_index, word_counts, &unique_word_count);
     fprintf(stderr, "unique words in dictionary: %d\n", unique_word_count);
@@ -277,6 +285,10 @@ int main() {
     fprintf(stderr, "sorting dictionary\n");
     qsort(word_tags, unique_word_count, sizeof(word_tag **), word_tag_cmp);
     fprintf(stderr, "finished sorting\n");
+}
+
+int main() {
+    init();
 
     char word_buf[MAX_WORD_SIZE];
     int scan_amt = 0;
@@ -284,7 +296,7 @@ int main() {
 
     int scanned_word_count = 0;
     int matched_word_count = 0;
-
+    word_tag *t = NULL;
     // At this point, all of the initialization is complete. We'll
     // scan stdin word by workd and do lookups in our sorted array. If
     // the word_tag is found, we'll increment the count
@@ -308,8 +320,8 @@ int main() {
         cat_link *n = (cat_link *)word_tags[i]->cats;
         do {
             for (int j = 0; j < cat_index; j = j + 1) {
-                if (strcmp(c[j].category, n->category) == 0) {
-                    c[j].count += word_tags[i]->count;
+                if (strcmp(cat_counts[j].category, n->category) == 0) {
+                    cat_counts[j].count += word_tags[i]->count;
                     break;
                 }
             }
@@ -320,7 +332,7 @@ int main() {
 
     // print out the basics
     for (int i = 0; i < cat_index; i = i + 1) {
-        printf("%-20s%d\n", c[i].category, c[i].count);
+        printf("%-20s%d\n", cat_counts[i].category, cat_counts[i].count);
     }
 
     return 0;
