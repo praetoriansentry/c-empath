@@ -1,9 +1,0 @@
-[submodule "trie"]
-	path = trie
-	url = https://github.com/skeeto/trie.git
-[submodule "empath"]
-	path = empath
-	url = git@github.com:Ejhfast/empath-client.git
-[submodule "uthash"]
-	path = uthash
-	url = git@github.com:troydhanson/uthash.git
