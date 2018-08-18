@@ -1,7 +1,9 @@
 #include <ctype.h>
+#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define MAX_LINE_LENGTH 16384
 #define MAX_CATEGORIES 1024
@@ -36,6 +38,8 @@ word_tag **word_tags = NULL;
 int unique_word_count = 0;
 int cat_index = 0;
 cat_count *cat_counts = NULL;
+
+char *category_data_file = "data/empath-categories.tsv";
 
 // get_line will read a line of MAX_LINE_LENGTH from the provided file
 char *get_line(FILE *s) {
@@ -254,9 +258,9 @@ void init() {
 
     // open the list of categories. I should probably make tihs an
     // input or something rather than hard coding.
-    FILE *cat_file = fopen("data/empath-categories.tsv", "r");
+    FILE *cat_file = fopen(category_data_file, "r");
     if (cat_file == NULL) {
-        fprintf(stderr, "Missing Category Datafile\n");
+        fprintf(stderr, "Missing Category Datafile: %s\n", category_data_file);
         exit(1);
     }
 
@@ -277,7 +281,6 @@ void init() {
     // Should be safe to close the file now
     fclose(cat_file);
 
-
     word_tags =
         make_word_tags(categories, cat_index, word_counts, &unique_word_count);
     fprintf(stderr, "unique words in dictionary: %d\n", unique_word_count);
@@ -287,7 +290,42 @@ void init() {
     fprintf(stderr, "finished sorting\n");
 }
 
-int main() {
+int has_fs(char *word) {
+    int index = 0;
+    while (1) {
+        if (word[index] == '\0') {
+            return 0;
+        }
+        if (word[index] == 28) {
+            return 1;
+        }
+        if (index > MAX_WORD_SIZE) {
+            fprintf(stderr, "Max word size exceeded while doing has_fs check");
+            exit(1);
+        }
+        index++;
+    }
+}
+
+void read_opts(int argc, char **argv) {
+    int c;
+    // extern char *optarg;
+    while ((c = getopt(argc, argv, "c::")) != -1) {
+        switch (c) {
+        case 'c':
+            printf("%s\n", category_data_file);
+            category_data_file = optarg;
+            printf("%s\n", category_data_file);
+            break;
+        default:
+            fprintf(stderr, "Usage options....\n");
+            exit(1);
+        }
+    }
+}
+
+int main(int argc, char **argv) {
+    read_opts(argc, argv);
     init();
 
     char word_buf[MAX_WORD_SIZE];
@@ -302,6 +340,10 @@ int main() {
     // the word_tag is found, we'll increment the count
     scan_amt = scanf("%s", word_buf);
     while (scan_amt > 0) {
+        if (has_fs(word_buf)) {
+            fprintf(stderr, "FILE SEP ENCOUNTERED");
+        }
+
         scanned_word_count++;
         lowercase(word_buf);
         current_word = trim_space(word_buf);
