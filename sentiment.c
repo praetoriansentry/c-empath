@@ -47,6 +47,15 @@ char *get_line(FILE *s) {
     return fgets(line, MAX_LINE_LENGTH, s);
 }
 
+// lowercase will convert all of the characters of a input string to
+// lowecase
+void lowercase(char *str) {
+    size_t len = strlen(str);
+    for (size_t i = 0; i < len; i = i + 1) {
+        str[i] = tolower(str[i]);
+    }
+}
+
 // get_words will take a line of text and split it into words. This is
 // done by breaking it up by spaces and tabs. This function also takes
 // an index in order to track how many words are allocated
@@ -183,6 +192,7 @@ word_tag **make_word_tags(char ***cats, int cat_count, int *word_counts,
                 t = (word_tag *)malloc(sizeof(word_tag));
                 word_tags[*uniq_word_count] = t;
                 *uniq_word_count += 1;
+                lowercase(words[j]);
                 t->word = words[j];
                 t->cats = NULL;
                 t->count = 0;
@@ -225,15 +235,6 @@ char *trim_space(char *str) {
     return str;
 }
 
-// lowercase will convert all of the characters of a input string to
-// lowecase
-void lowercase(char *str) {
-    size_t len = strlen(str);
-    for (size_t i = 0; i < len; i = i + 1) {
-        str[i] = tolower(str[i]);
-    }
-}
-
 // word_tag_cmp will compare two word_tags. Used to sort the full
 // collection
 int word_tag_cmp(const void *a, const void *b) {
@@ -271,6 +272,7 @@ void init() {
             words = get_words(current_line, &(word_counts[cat_index]));
             categories[cat_index] = words;
             cur_cat = (cat_count *)malloc(sizeof(cat_count));
+            lowercase(words[0]);
             cur_cat->category = words[0]; // hopefully it's there
             cur_cat->count = 0;
             cat_counts[cat_index] = *cur_cat;
