@@ -1,6 +1,6 @@
 BIN := sentiment
 all:
-	gcc -g -o $(BIN) -Wall -Wextra -Wpedantic -std=c11 trie/trie.c sentiment.c
+	gcc -g -o $(BIN) -Wall -Wextra -Wpedantic -std=c11 sentiment.c
 clean:
 	$(RM) $(BIN)
 

@@ -246,7 +246,7 @@ int main() {
 
     // open the list of categories. I should probably make tihs an
     // input or something rather than hard coding.
-    FILE *cat_file = fopen("empath/empath/data/categories.tsv", "r");
+    FILE *cat_file = fopen("data/empath-categories.tsv", "r");
     if (cat_file == NULL) {
         fprintf(stderr, "Missing Category Datafile\n");
         exit(1);
