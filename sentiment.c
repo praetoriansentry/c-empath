@@ -9,14 +9,6 @@
 #define MAX_CATEGORIES 1024
 #define MAX_WORD_SIZE 1024
 
-// cat_link is the node structure for a linked list. Every term that
-// we use for frequency analysis is associated with 1 or more
-// categories like this
-typedef struct {
-    char *category;
-    struct cat_link *next;
-} cat_link;
-
 // cat_count is used to summarize all of the findings. Each word is
 // associated with categories and we use this struct to count the
 // number of times we've seen hits for different categories
@@ -24,6 +16,16 @@ typedef struct {
     char *category;
     int count;
 } cat_count;
+
+// cat_link is the node structure for a linked list. Every term that
+// we use for frequency analysis is associated with 1 or more
+// categories like this
+typedef struct {
+    char *category;
+    cat_count *cat_count_p;
+    struct cat_link *next;
+} cat_link;
+
 
 // word_tag represents each word in our dictionary. Each work is
 // associated with a set of categories. The count member i used to
@@ -123,9 +125,10 @@ int strcmp_wild(char *a, char *b) {
 
 // add_cat will take a cat_link and a new category and prepend it to
 // the beginning of the linked list.
-cat_link *add_cat(cat_link *link, char *category) {
+cat_link *add_cat(cat_link *link, char *category, cat_count *cat_count_p) {
     cat_link *c = (cat_link *)malloc(sizeof(cat_link *));
     c->category = category;
+    c->cat_count_p = cat_count_p;
     c->next = (struct cat_link *)link;
     return c;
 }
@@ -159,26 +162,32 @@ word_tag *find_word(word_tag **word_tags, int word_count, char *term) {
 }
 
 // make_word_tags will initialize the set of all word tags
-word_tag **make_word_tags(char ***cats, int cat_count, int *word_counts,
+word_tag **make_word_tags(char ***cats, int number_of_cats, int *word_counts,
                           int *uniq_word_count) {
+    cat_count *cur_cat_count = NULL;
     int total_word_count = 0;
-    for (int i = 0; i < cat_count; i = i + 1) {
-        total_word_count += word_counts[i];
-    }
-    word_tag **word_tags =
-        (word_tag **)calloc(total_word_count, sizeof(word_tag *));
-
     char **words = NULL;
     int word_count;
     char *current_cat = NULL;
+
+    for (int i = 0; i < number_of_cats; i = i + 1) {
+        total_word_count += word_counts[i];
+    }
+    word_tag **word_tags = (word_tag **)calloc(total_word_count, sizeof(word_tag *));
     word_tag *t;
 
-    for (int i = 0; i < cat_count; i = i + 1) {
+    for (int i = 0; i < number_of_cats; i = i + 1) {
         words = cats[i];
         word_count = word_counts[i];
         for (int j = 0; j < word_count; j = j + 1) {
             if (j == 0) {
                 current_cat = words[j];
+                for (int k = 0; k < cat_index; k = k + 1) {
+                    if (strcmp(cat_counts[k].category, current_cat) == 0) {
+                        cur_cat_count = (cat_counts + k);
+                        break;
+                    }
+                }
                 continue;
             }
 
@@ -198,7 +207,7 @@ word_tag **make_word_tags(char ***cats, int cat_count, int *word_counts,
                 t->count = 0;
             }
             // now that we have a tag, we'll add the current category
-            cat_link *c = add_cat(t->cats, current_cat);
+            cat_link *c = add_cat(t->cats, current_cat, cur_cat_count);
             // c would have be prepended with the new cateogry, we'll
             // overwrite the pointer within the word_tag
             t->cats = c;
@@ -215,7 +224,7 @@ char *trim_space(char *str) {
     char *end;
 
     // Trim leading space
-    while (isspace((unsigned char)*str)) {
+    while (isspace((unsigned char)*str) || *str == '"' || *str == 28 || *str == '\\') {
         str++;
     }
 
@@ -325,6 +334,22 @@ void read_opts(int argc, char **argv) {
         }
     }
 }
+void flush_and_reset() {
+    for (int i = 0; i < unique_word_count; i = i + 1) {
+        cat_link *n = (cat_link *)word_tags[i]->cats;
+        do {
+            n->cat_count_p->count += word_tags[i]->count;
+            word_tags[i]->count = 0;
+            n = (cat_link *)n->next;
+        } while (n != NULL);
+    }
+
+    // print out the basics
+    for (int i = 0; i < cat_index; i = i + 1) {
+        printf("%-20s%d\n", cat_counts[i].category, cat_counts[i].count);
+        cat_counts[i].count = 0;
+    }
+}
 
 int main(int argc, char **argv) {
     read_opts(argc, argv);
@@ -334,6 +359,7 @@ int main(int argc, char **argv) {
     int scan_amt = 0;
     char *current_word = NULL;
 
+    int reset_metrics = 0;
     int scanned_word_count = 0;
     int matched_word_count = 0;
     word_tag *t = NULL;
@@ -342,17 +368,20 @@ int main(int argc, char **argv) {
     // the word_tag is found, we'll increment the count
     scan_amt = scanf("%s", word_buf);
     while (scan_amt > 0) {
-        if (has_fs(word_buf)) {
-            fprintf(stderr, "FILE SEP ENCOUNTERED");
-        }
-
         scanned_word_count++;
         lowercase(word_buf);
+        reset_metrics = has_fs(word_buf);
         current_word = trim_space(word_buf);
+
         t = (word_tag *)find_word(word_tags, unique_word_count, current_word);
         if (t != NULL) {
             matched_word_count++;
             t->count++;
+        }
+
+        if (reset_metrics == 1) {
+            reset_metrics = 0;
+            flush_and_reset();
         }
         scan_amt = scanf("%s", word_buf);
     }
@@ -360,24 +389,6 @@ int main(int argc, char **argv) {
     fprintf(stderr, "Total words scanned: %d\n", scanned_word_count);
     fprintf(stderr, "Total words matched: %d\n", matched_word_count);
 
-    for (int i = 0; i < unique_word_count; i = i + 1) {
-        cat_link *n = (cat_link *)word_tags[i]->cats;
-        do {
-            for (int j = 0; j < cat_index; j = j + 1) {
-                if (strcmp(cat_counts[j].category, n->category) == 0) {
-                    cat_counts[j].count += word_tags[i]->count;
-                    break;
-                }
-            }
-            // Move to the next node in the linked list
-            n = (cat_link *)n->next;
-        } while (n != NULL);
-    }
-
-    // print out the basics
-    for (int i = 0; i < cat_index; i = i + 1) {
-        printf("%-20s%d\n", cat_counts[i].category, cat_counts[i].count);
-    }
 
     return 0;
 }
