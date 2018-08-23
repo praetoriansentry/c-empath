@@ -379,11 +379,11 @@ int main(int argc, char **argv) {
             t->count++;
         }
 
-        if (reset_metrics == 1) {
+        scan_amt = scanf("%s", word_buf);
+        if (reset_metrics == 1 || scan_amt < 1) {
             reset_metrics = 0;
             flush_and_reset();
         }
-        scan_amt = scanf("%s", word_buf);
     }
 
     fprintf(stderr, "Total words scanned: %d\n", scanned_word_count);
