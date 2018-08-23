@@ -36,6 +36,7 @@ typedef struct {
     cat_link *cats;
 } word_tag;
 
+int first_flush = 1;
 word_tag **word_tags = NULL;
 int unique_word_count = 0;
 int cat_index = 0;
@@ -344,11 +345,20 @@ void flush_and_reset() {
         } while (n != NULL);
     }
 
+    if (first_flush == 1) {
+        for (int i = 0; i < cat_index; i = i + 1) {
+            printf("%s,", cat_counts[i].category);
+        }
+        first_flush = 0;
+        printf("\n");
+    }
+
     // print out the basics
     for (int i = 0; i < cat_index; i = i + 1) {
-        printf("%-20s%d\n", cat_counts[i].category, cat_counts[i].count);
+        printf("%d,", cat_counts[i].count);
         cat_counts[i].count = 0;
     }
+    printf("\n");
 }
 
 int main(int argc, char **argv) {
