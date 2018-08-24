@@ -225,7 +225,7 @@ char *trim_space(char *str) {
     char *end;
 
     // Trim leading space
-    while (isspace((unsigned char)*str) || *str == '"' || *str == 28 || *str == '\\') {
+    while (isspace((unsigned char)*str)) {
         str++;
     }
 
@@ -241,6 +241,18 @@ char *trim_space(char *str) {
 
     // Write new null terminator character
     end[1] = '\0';
+
+    return str;
+}
+
+char *trim_leading_junk(char *str) {
+    if (*str == 0) {
+        return str;
+    }
+
+    while (!isalnum(*str) && *str != '(' && *str != ':' && *str != 0) {
+        str++;
+    }
 
     return str;
 }
@@ -382,6 +394,7 @@ int main(int argc, char **argv) {
         lowercase(word_buf);
         reset_metrics = has_fs(word_buf);
         current_word = trim_space(word_buf);
+        current_word = trim_leading_junk(current_word);
 
         t = (word_tag *)find_word(word_tags, unique_word_count, current_word);
         if (t != NULL) {
