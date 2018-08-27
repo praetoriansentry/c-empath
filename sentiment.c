@@ -268,7 +268,7 @@ char *trim_leading_junk(char *str) {
         return str;
     }
 
-    while (!isalnum(*str) && *str != '(' && *str != ':' && *str != 0) {
+    while (!isalnum(*str) && *str != 0) {
         str++;
     }
 

@@ -7,3 +7,6 @@ clean:
 format:
 	clang-format -i -style="{BasedOnStyle: llvm, IndentWidth: 4}" sentiment.c
 
+test:
+	cat data/test-text.txt | ./$(BIN) -cdata/test-cats.tsv
+

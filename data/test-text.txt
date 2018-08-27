@@ -1,2 +1,15 @@
-skittleZzz SKITTLE
-"test"
+This first entry should have no matches
+
+This entry should have one cat one match for lowercase
+
+Here we will test the wildcard and we should hvae one match in cat1
+
+This shouuld have one match for cat1 and cat2 for repeated
+
+This should match everything
+lowercase       UPPPERCASE      MIXEDcase       wildca* repeated
+repeated        foo             bar             baz
+
+This should have one cat1 match "WILDCARD"
+
+This should have one cat1 match (WILDCARD)
