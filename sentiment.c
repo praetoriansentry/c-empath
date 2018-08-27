@@ -26,7 +26,6 @@ typedef struct {
     struct cat_link *next;
 } cat_link;
 
-
 // word_tag represents each word in our dictionary. Each work is
 // associated with a set of categories. The count member i used to
 // track how many times a particular word has been encountered.
@@ -36,12 +35,31 @@ typedef struct {
     cat_link *cats;
 } word_tag;
 
+// first_flush is used to indicate that we haven't flushed anything to
+// stdout yet. In that case, we might want to send a header row if
+// we're writing to csv
 int first_flush = 1;
+
+// word_tags is the list of all of the words tags that we're using for
+// analysis
 word_tag **word_tags = NULL;
+
+// unique_word_count is the total number of unique words in our
+// dictionary
 int unique_word_count = 0;
+
+// cat_index holds the total number of categories in our
+// dictionary. We use it as an iteration limit when looping through
+// the categories.
 int cat_index = 0;
+
+// cat_counts is the array of all of the category counts for our
+// dictionary. We keep then in an array and the catlinks keep a
+// pointer to the cat count
 cat_count *cat_counts = NULL;
 
+// category_data_file gets overridden with a file input for the
+// current dictionary that we're goint to use.
 char *category_data_file = "data/empath-categories.tsv";
 
 // get_line will read a line of MAX_LINE_LENGTH from the provided file
