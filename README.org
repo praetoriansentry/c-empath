@@ -1,2 +1,3 @@
 Simple Frequency Analysis
 
+[[https://travis-ci.com/praetoriansentry/c-empath.svg?branch=master]]
