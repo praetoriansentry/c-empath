@@ -264,6 +264,8 @@ char *trim_space(char *str) {
     return str;
 }
 
+// trim_leading_junk will strip of characters at the beginning of a
+// string so that we can match stuff like "foo" (bar) \'baz etc
 char *trim_leading_junk(char *str) {
     if (*str == 0) {
         return str;
@@ -284,6 +286,7 @@ int word_tag_cmp(const void *a, const void *b) {
     return strcmp((*ta)->word, (*tb)->word);
 }
 
+// init will initialize the main data structures for matching words
 void init() {
     // Globals
     word_tags = NULL;
@@ -333,6 +336,8 @@ void init() {
     fprintf(stderr, "finished sorting\n");
 }
 
+// has_fs checks and given wored to see if it's a file separator. We
+// use this to separate inputs in stdin
 int has_fs(char *word) {
     int index = 0;
     while (1) {
@@ -350,6 +355,8 @@ int has_fs(char *word) {
     }
 }
 
+// read_opts will read the command line arguments and populate them
+// into various globals
 void read_opts(int argc, char **argv) {
     int c;
     // extern char *optarg;
@@ -366,6 +373,9 @@ void read_opts(int argc, char **argv) {
         }
     }
 }
+
+// flush_and_reset will output the current stats of the process and
+// reset the counters.
 void flush_and_reset() {
     for (int i = 0; i < unique_word_count; i = i + 1) {
         cat_link *n = (cat_link *)word_tags[i]->cats;
@@ -392,6 +402,8 @@ void flush_and_reset() {
     printf("\n");
 }
 
+// main executes the main program loop. we're initializing the the
+// dictionary data structure and reading stdin for all of the words
 int main(int argc, char **argv) {
     read_opts(argc, argv);
     init();
