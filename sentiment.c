@@ -192,7 +192,8 @@ word_tag **make_word_tags(char ***cats, int number_of_cats, int *word_counts,
     for (int i = 0; i < number_of_cats; i = i + 1) {
         total_word_count += word_counts[i];
     }
-    word_tag **word_tags = (word_tag **)calloc(total_word_count, sizeof(word_tag *));
+    word_tag **word_tags =
+        (word_tag **)calloc(total_word_count, sizeof(word_tag *));
     word_tag *t;
 
     for (int i = 0; i < number_of_cats; i = i + 1) {
@@ -429,7 +430,6 @@ int main(int argc, char **argv) {
 
     fprintf(stderr, "Total words scanned: %d\n", scanned_word_count);
     fprintf(stderr, "Total words matched: %d\n", matched_word_count);
-
 
     return 0;
 }
