@@ -35,6 +35,13 @@ typedef struct {
     cat_link *cats;
 } word_tag;
 
+typedef struct {
+    int words;
+    int periods;
+    int question_marks;
+    int exclamations;
+} word_stats;
+
 // first_flush is used to indicate that we haven't flushed anything to
 // stdout yet. In that case, we might want to send a header row if
 // we're writing to csv
@@ -61,6 +68,8 @@ cat_count *cat_counts = NULL;
 // category_data_file gets overridden with a file input for the
 // current dictionary that we're goint to use.
 char *category_data_file = "data/empath-categories.tsv";
+
+word_stats *general_statistics = NULL;
 
 // get_line will read a line of MAX_LINE_LENGTH from the provided file
 char *get_line(FILE *s) {
@@ -292,6 +301,7 @@ void init() {
     word_tags = NULL;
     unique_word_count = 0;
     cat_counts = (cat_count *)calloc(MAX_CATEGORIES, sizeof(cat_count));
+    general_statistics = (word_stats * ) calloc(1, sizeof(word_stats));
 
     char *current_line = NULL;
     char **words = NULL;
@@ -355,6 +365,35 @@ int has_fs(char *word) {
     }
 }
 
+void track_stats(char *word) {
+    int index = 0;
+    int has_alphanum = 0;
+    while (1) {
+        if (word[index] == '\0') {
+            return;
+        }
+        if (has_alphanum == 0 && isalnum(word[index])) {
+            has_alphanum = 1;
+            general_statistics->words++;
+        }
+        if (word[index] == '.') {
+            general_statistics->periods++;
+        }
+        if (word[index] == '?') {
+            general_statistics->question_marks++;
+        }
+        if (word[index] == '!') {
+            general_statistics->exclamations++;
+        }
+
+        if (index > MAX_WORD_SIZE) {
+            fprintf(stderr, "Max word size exceeded while doing has_fs check");
+            exit(1);
+        }
+        index++;
+    }
+}
+
 // read_opts will read the command line arguments and populate them
 // into various globals
 void read_opts(int argc, char **argv) {
@@ -387,6 +426,7 @@ void flush_and_reset() {
     }
 
     if (first_flush == 1) {
+        printf("words,periods,question_marks,exclamations,");
         for (int i = 0; i < cat_index; i = i + 1) {
             printf("%s", cat_counts[i].category);
             if ((i + i) < cat_index) {
@@ -397,6 +437,7 @@ void flush_and_reset() {
         printf("\n");
     }
 
+    printf("%d,%d,%d,%d,", general_statistics->words, general_statistics->periods, general_statistics->question_marks, general_statistics->exclamations);
     // print out the basics
     for (int i = 0; i < cat_index; i = i + 1) {
         printf("%d", cat_counts[i].count);
@@ -406,6 +447,7 @@ void flush_and_reset() {
 
         cat_counts[i].count = 0;
     }
+    memset(general_statistics, 0, sizeof(word_stats));
     printf("\n");
 }
 
@@ -429,6 +471,7 @@ int main(int argc, char **argv) {
     scan_amt = scanf("%s", word_buf);
     while (scan_amt > 0) {
         scanned_word_count++;
+        track_stats(word_buf);
         lowercase(word_buf);
         reset_metrics = has_fs(word_buf);
         current_word = trim_space(word_buf);
