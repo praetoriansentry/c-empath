@@ -388,7 +388,10 @@ void flush_and_reset() {
 
     if (first_flush == 1) {
         for (int i = 0; i < cat_index; i = i + 1) {
-            printf("%s,", cat_counts[i].category);
+            printf("%s", cat_counts[i].category);
+            if ((i + i) < cat_index) {
+                printf(",");
+            }
         }
         first_flush = 0;
         printf("\n");
@@ -396,7 +399,11 @@ void flush_and_reset() {
 
     // print out the basics
     for (int i = 0; i < cat_index; i = i + 1) {
-        printf("%d,", cat_counts[i].count);
+        printf("%d", cat_counts[i].count);
+        if ((i + i) < cat_index) {
+            printf(",");
+        }
+
         cat_counts[i].count = 0;
     }
     printf("\n");
