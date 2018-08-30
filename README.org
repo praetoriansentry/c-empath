@@ -1,3 +1,56 @@
 Simple Frequency Analysis
 
 [[https://travis-ci.com/praetoriansentry/c-empath.svg?branch=master]]
+
+
+This is a simple C tool which can be used like Empath and LIWC to
+count the number of words in some piece of text. To use it you would
+need to do something like this.
+
+#+BEGIN_SRC
+make
+cat data/bible.txt | ./sentiment -c data/empath-categories.tsv
+#+END_SRC
+
+The application will read from the standard input and parse all of the
+words and do a frequency analysis of those words based categories in
+the file ~empath-categories.tsv~. The ~empath-categories.tsv~ right
+now is taken directly from [[https://github.com/Ejhfast/empath-client/blob/master/empath/data/categories.tsv][here]], but it's possible to replace it with
+any properly structured TSV file. The file needs to look something
+like this:
+
+#+BEGIN_SRC
+category1	word1	word2	word3	word4	prefix5*	...
+category2	word1	word2	word3	word4	prefix5*	...
+#+END_SRC
+
+This tool will look up each word in each category and track how many
+instances of each category are seen for a given input. The output of
+this program is a CSV with a column for each of the input categories.
+
+Here are some of the features:
+
+- Wild cards: test* and testing match
+- Case Clean Up: TEST and test match
+- Partial Match: "test" and test would match
+- Fast lookups: Binary search for word matches
+- ASCII File Separator Support
+- Low memory
+
+In order to process multiple samples in a single input stream, you can
+use the file separator (/char(28)) to separatate them. Each time we
+find the file separator character, we'll write the current CSV line to
+stdout and reset our counters.
+
+At the moment there are a few limitiations:
+
+- Max of 1024 categories
+- Max of 16384 characters on a single line of the categories file
+- Max of 1024 characters in a single word
+
+There are also a few things to address and improve in the future:
+
+- More configuration of output
+- Better code organization
+- Better memory management
+- More built in categories
