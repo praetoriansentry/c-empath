@@ -305,7 +305,7 @@ void init() {
     word_tags = NULL;
     unique_word_count = 0;
     cat_counts = (cat_count *)calloc(MAX_CATEGORIES, sizeof(cat_count));
-    general_statistics = (word_stats * ) calloc(1, sizeof(word_stats));
+    general_statistics = (word_stats *)calloc(1, sizeof(word_stats));
 
     char *current_line = NULL;
     char **words = NULL;
@@ -352,7 +352,6 @@ void init() {
     if (verbose_mode == 1) {
         fprintf(stderr, "finished sorting\n");
     }
-
 }
 
 // has_fs checks and given wored to see if it's a file separator. We
@@ -453,11 +452,13 @@ void flush_and_reset() {
         printf("\n");
     }
 
-    printf("%d,%d,%d,%d,", general_statistics->words, general_statistics->periods, general_statistics->question_marks, general_statistics->exclamations);
+    printf("%d,%d,%d,%d,", general_statistics->words,
+           general_statistics->periods, general_statistics->question_marks,
+           general_statistics->exclamations);
     // print out the basics
     for (int i = 0; i < cat_index; i = i + 1) {
         printf("%d", cat_counts[i].count);
-        if (i < (cat_index-1)) {
+        if (i < (cat_index - 1)) {
             printf(",");
         }
 
@@ -481,6 +482,7 @@ int main(int argc, char **argv) {
     int scanned_word_count = 0;
     int matched_word_count = 0;
     word_tag *t = NULL;
+
     // At this point, all of the initialization is complete. We'll
     // scan stdin word by workd and do lookups in our sorted array. If
     // the word_tag is found, we'll increment the count
