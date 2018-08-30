@@ -69,7 +69,11 @@ cat_count *cat_counts = NULL;
 // current dictionary that we're goint to use.
 char *category_data_file = "data/empath-categories.tsv";
 
+// general_statistics is used to track non word based stats
 word_stats *general_statistics = NULL;
+
+// verbose_mode is a flag to deterine if we should dump out extra information
+int verbose_mode = 0;
 
 // get_line will read a line of MAX_LINE_LENGTH from the provided file
 char *get_line(FILE *s) {
@@ -339,11 +343,16 @@ void init() {
 
     word_tags =
         make_word_tags(categories, cat_index, word_counts, &unique_word_count);
-    fprintf(stderr, "unique words in dictionary: %d\n", unique_word_count);
-    fprintf(stderr, "unique categories in dictionary: %d\n", cat_index);
-    fprintf(stderr, "sorting dictionary\n");
+    if (verbose_mode == 1) {
+        fprintf(stderr, "unique words in dictionary: %d\n", unique_word_count);
+        fprintf(stderr, "unique categories in dictionary: %d\n", cat_index);
+        fprintf(stderr, "sorting dictionary\n");
+    }
     qsort(word_tags, unique_word_count, sizeof(word_tag **), word_tag_cmp);
-    fprintf(stderr, "finished sorting\n");
+    if (verbose_mode == 1) {
+        fprintf(stderr, "finished sorting\n");
+    }
+
 }
 
 // has_fs checks and given wored to see if it's a file separator. We
@@ -405,12 +414,13 @@ void show_usage(char **argv) {
 void read_opts(int argc, char **argv) {
     int c;
     // extern char *optarg;
-    while ((c = getopt(argc, argv, "c:")) != -1) {
+    while ((c = getopt(argc, argv, "vc:")) != -1) {
         switch (c) {
         case 'c':
-            printf("%s\n", category_data_file);
             category_data_file = optarg;
-            printf("%s\n", category_data_file);
+            break;
+        case 'v':
+            verbose_mode = 1;
             break;
         default:
             show_usage(argv);
@@ -496,8 +506,10 @@ int main(int argc, char **argv) {
         }
     }
 
-    fprintf(stderr, "Total words scanned: %d\n", scanned_word_count);
-    fprintf(stderr, "Total words matched: %d\n", matched_word_count);
+    if (verbose_mode == 1) {
+        fprintf(stderr, "Total words scanned: %d\n", scanned_word_count);
+        fprintf(stderr, "Total words matched: %d\n", matched_word_count);
+    }
 
     return 0;
 }
