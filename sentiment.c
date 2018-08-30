@@ -435,7 +435,7 @@ void flush_and_reset() {
         printf("words,periods,question_marks,exclamations,");
         for (int i = 0; i < cat_index; i = i + 1) {
             printf("%s", cat_counts[i].category);
-            if ((i + i) < cat_index) {
+            if (i < (cat_index - 1)) {
                 printf(",");
             }
         }
@@ -447,7 +447,7 @@ void flush_and_reset() {
     // print out the basics
     for (int i = 0; i < cat_index; i = i + 1) {
         printf("%d", cat_counts[i].count);
-        if ((i + i) < cat_index) {
+        if (i < (cat_index-1)) {
             printf(",");
         }
 
