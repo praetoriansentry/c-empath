@@ -365,6 +365,7 @@ int has_fs(char *word) {
     }
 }
 
+// track_stats will track general stats rather that specific word counts
 void track_stats(char *word) {
     int index = 0;
     int has_alphanum = 0;
@@ -394,12 +395,17 @@ void track_stats(char *word) {
     }
 }
 
+void show_usage(char **argv) {
+    printf("%s -c categories.tsv\n", argv[0]);
+    return;
+}
+
 // read_opts will read the command line arguments and populate them
 // into various globals
 void read_opts(int argc, char **argv) {
     int c;
     // extern char *optarg;
-    while ((c = getopt(argc, argv, "c::")) != -1) {
+    while ((c = getopt(argc, argv, "c:")) != -1) {
         switch (c) {
         case 'c':
             printf("%s\n", category_data_file);
@@ -407,7 +413,7 @@ void read_opts(int argc, char **argv) {
             printf("%s\n", category_data_file);
             break;
         default:
-            fprintf(stderr, "Usage options....\n");
+            show_usage(argv);
             exit(1);
         }
     }

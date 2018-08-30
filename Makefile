@@ -8,5 +8,5 @@ format:
 	clang-format -i -style="{BasedOnStyle: llvm, IndentWidth: 4}" sentiment.c
 
 test:
-	cat data/test-text.txt | ./$(BIN) -cdata/test-cats.tsv
+	cat data/test-text.txt | ./$(BIN) -c data/test-cats.tsv
 
