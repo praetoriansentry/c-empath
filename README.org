@@ -55,7 +55,7 @@ There are also a few things to address and improve in the future:
 - Better memory management
 - More built in categories
 
-* Example
+* Example with Many Files
 
 In order to process a bunch of files rapidly, we need to concatenate
 them together using the file separator character and pass them via
@@ -69,3 +69,14 @@ In order to get some sample books from Project Gutenberg, you can run
 ~make books~ to download a bunch of txt files from the top 100
 books. The command below injects a file separator begween every file
 and pushes into the frequency analysis program.
+
+* Example with JSON
+
+In this example I'm using ~jq~ to do most of the heavy lifting. We're
+parsing the field that we're interested in and adding the file
+separator character to the end of the field. Then we're passing that
+data into the text analysis tool.
+
+#+BEGIN_SRC
+cat data/News_Category_Dataset.json | jq -r '.short_description + "\u001c"' | ./sentiment
+#+END_SRC

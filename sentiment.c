@@ -403,6 +403,7 @@ void track_stats(char *word) {
     }
 }
 
+// show_usage is supposed to give an example of how to use this program
 void show_usage(char **argv) {
     printf("%s -c categories.tsv\n", argv[0]);
     return;
