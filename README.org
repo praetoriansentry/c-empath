@@ -54,3 +54,18 @@ There are also a few things to address and improve in the future:
 - Better code organization
 - Better memory management
 - More built in categories
+
+* Example
+
+In order to process a bunch of files rapidly, we need to concatenate
+them together using the file separator character and pass them via
+stdin to the sentiment program. A command like this would do the trick.
+
+#+BEGIN_SRC
+awk 'BEGINFILE {print "\x1c"}{print}' books/* | ./sentiment
+#+END_SRC
+
+In order to get some sample books from Project Gutenberg, you can run
+~make books~ to download a bunch of txt files from the top 100
+books. The command below injects a file separator begween every file
+and pushes into the frequency analysis program.
