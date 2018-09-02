@@ -217,7 +217,6 @@ word_tag **make_word_tags(char ***cats, int number_of_cats, int *word_counts,
     }
     word_tags = (word_tag **)calloc(total_word_count, sizeof(word_tag *));
 
-
     for (i = 0; i < number_of_cats; i = i + 1) {
         words = cats[i];
         word_count = word_counts[i];
@@ -447,7 +446,8 @@ void read_opts(int argc, char **argv) {
 // reset the counters.
 void flush_and_reset() {
     int i = 0;
-    // if this is the first flush, we'll spit out a header row for our CSV of data
+    // if this is the first flush, we'll spit out a header row for our CSV of
+    // data
     if (first_flush == 1) {
         printf("words,periods,question_marks,exclamations,");
         for (i = 0; i < cat_index; i = i + 1) {
@@ -475,7 +475,8 @@ void flush_and_reset() {
         cat_counts[i].count = 0;
     }
 
-    // After we've printed everything, we'll reset the general stats and the counts for each word
+    // After we've printed everything, we'll reset the general stats and the
+    // counts for each word
     memset(general_statistics, 0, sizeof(word_stats));
     for (i = 0; i < unique_word_count; i = i + 1) {
         word_tags[i]->count = 0;
@@ -518,7 +519,8 @@ int main(int argc, char **argv) {
             matched_word_count++;
             t->count++;
 
-            // loop through the linked list in increm the categories associated with the word
+            // loop through the linked list in increm the categories associated
+            // with the word
             n = (cat_link *)t->cats;
             do {
                 n->cat_count_p->count++;
