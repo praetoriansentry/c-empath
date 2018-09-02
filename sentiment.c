@@ -85,7 +85,8 @@ char *get_line(FILE *s) {
 // lowecase
 void lowercase(char *str) {
     size_t len = strlen(str);
-    for (size_t i = 0; i < len; i = i + 1) {
+    size_t i = 0;
+    for (i = 0; i < len; i = i + 1) {
         str[i] = tolower(str[i]);
     }
 }
@@ -95,10 +96,13 @@ void lowercase(char *str) {
 // an index in order to track how many words are allocated
 char **get_words(char *line, int *index) {
     int num_words = 0;
+    int i = 0;
+    int was_end = 1;
     int line_length = strlen(line);
+    char **words = NULL;
 
     // Figure out the total number of words
-    for (int i = 0; i < line_length; i = i + 1) {
+    for (i = 0; i < line_length; i = i + 1) {
         if (line[i] == ' ' || line[i] == '\n' || line[i] == '\t' ||
             line[i + 1] == '\0') {
             num_words = num_words + 1;
@@ -106,15 +110,14 @@ char **get_words(char *line, int *index) {
     }
 
     // allocate space to store pointers to all of the words.
-    char **words = (char **)calloc(num_words, sizeof(char *));
+    words = (char **)calloc(num_words, sizeof(char *));
     *index = 0;
-    int was_end = 1;
 
     // walk down the line and replace all of the space sparation
     // characters with null bytes. This will allow us to use the
     // original memory allocated from the whole line. No need to copy
     // the strings.
-    for (int i = 0; i < line_length; i = i + 1) {
+    for (i = 0; i < line_length; i = i + 1) {
         if (line[i] == ' ' || line[i] == '\n' || line[i] == '\t') {
             line[i] = '\0';
             was_end = 1;
@@ -169,7 +172,8 @@ cat_link *add_cat(cat_link *link, char *category, cat_count *cat_count_p) {
 // our collection. This is necessary before we sort the collection of
 // words
 word_tag *find_word_linear(word_tag **word_tags, int word_count, char *term) {
-    for (int i = 0; i < word_count; i = i + 1) {
+    int i = 0;
+    for (i = 0; i < word_count; i = i + 1) {
         if (strcmp_wild(word_tags[i]->word, term) == 0) {
             return word_tags[i];
         }
@@ -179,9 +183,9 @@ word_tag *find_word_linear(word_tag **word_tags, int word_count, char *term) {
 
 // find_word will doe a binary search within the set of word tags
 word_tag *find_word(word_tag **word_tags, int word_count, char *term) {
-    int i = 0, j = word_count - 1;
+    int i = 0, j = word_count - 1, k = 0;
     while (i <= j) {
-        int k = (i + j) / 2;
+        k = (i + j) / 2;
         if (strcmp_wild(word_tags[k]->word, term) == 0) {
             return word_tags[k];
         } else if (strcmp_wild(word_tags[k]->word, term) < 0) {
@@ -201,21 +205,26 @@ word_tag **make_word_tags(char ***cats, int number_of_cats, int *word_counts,
     char **words = NULL;
     int word_count;
     char *current_cat = NULL;
+    int i = 0;
+    int j = 0;
+    int k = 0;
+    word_tag **word_tags;
+    word_tag *t;
+    cat_link *c;
 
-    for (int i = 0; i < number_of_cats; i = i + 1) {
+    for (i = 0; i < number_of_cats; i = i + 1) {
         total_word_count += word_counts[i];
     }
-    word_tag **word_tags =
-        (word_tag **)calloc(total_word_count, sizeof(word_tag *));
-    word_tag *t;
+    word_tags = (word_tag **)calloc(total_word_count, sizeof(word_tag *));
 
-    for (int i = 0; i < number_of_cats; i = i + 1) {
+
+    for (i = 0; i < number_of_cats; i = i + 1) {
         words = cats[i];
         word_count = word_counts[i];
-        for (int j = 0; j < word_count; j = j + 1) {
+        for (j = 0; j < word_count; j = j + 1) {
             if (j == 0) {
                 current_cat = words[j];
-                for (int k = 0; k < cat_index; k = k + 1) {
+                for (k = 0; k < cat_index; k = k + 1) {
                     if (strcmp(cat_counts[k].category, current_cat) == 0) {
                         cur_cat_count = (cat_counts + k);
                         break;
@@ -240,7 +249,8 @@ word_tag **make_word_tags(char ***cats, int number_of_cats, int *word_counts,
                 t->count = 0;
             }
             // now that we have a tag, we'll add the current category
-            cat_link *c = add_cat(t->cats, current_cat, cur_cat_count);
+            c = add_cat(t->cats, current_cat, cur_cat_count);
+
             // c would have be prepended with the new cateogry, we'll
             // overwrite the pointer within the word_tag
             t->cats = c;
@@ -301,23 +311,24 @@ int word_tag_cmp(const void *a, const void *b) {
 
 // init will initialize the main data structures for matching words
 void init() {
+    char *current_line = NULL;
+    char **words = NULL;
+    cat_count *cur_cat = NULL;
+    FILE *cat_file = NULL;
+    int *word_counts = (int *)calloc(MAX_CATEGORIES, sizeof(char **));
+    char ***categories = (char ***)calloc(MAX_CATEGORIES, sizeof(char **));
+
     // Globals
     word_tags = NULL;
     unique_word_count = 0;
     cat_counts = (cat_count *)calloc(MAX_CATEGORIES, sizeof(cat_count));
     general_statistics = (word_stats *)calloc(1, sizeof(word_stats));
-
-    char *current_line = NULL;
-    char **words = NULL;
-    int *word_counts = (int *)calloc(MAX_CATEGORIES, sizeof(char **));
-    char ***categories = (char ***)calloc(MAX_CATEGORIES, sizeof(char **));
-
     cat_index = 0;
-    cat_count *cur_cat = NULL;
 
     // open the list of categories. I should probably make tihs an
     // input or something rather than hard coding.
-    FILE *cat_file = fopen(category_data_file, "r");
+    cat_file = fopen(category_data_file, "r");
+
     if (cat_file == NULL) {
         fprintf(stderr, "Missing Category Datafile: %s\n", category_data_file);
         exit(1);
@@ -377,6 +388,7 @@ int has_fs(char *word) {
 void track_stats(char *word) {
     int index = 0;
     int has_alphanum = 0;
+
     while (1) {
         if (word[index] == '\0') {
             return;
@@ -434,9 +446,11 @@ void read_opts(int argc, char **argv) {
 // flush_and_reset will output the current stats of the process and
 // reset the counters.
 void flush_and_reset() {
+    int i = 0;
+    // if this is the first flush, we'll spit out a header row for our CSV of data
     if (first_flush == 1) {
         printf("words,periods,question_marks,exclamations,");
-        for (int i = 0; i < cat_index; i = i + 1) {
+        for (i = 0; i < cat_index; i = i + 1) {
             printf("%s", cat_counts[i].category);
             if (i < (cat_index - 1)) {
                 printf(",");
@@ -449,17 +463,21 @@ void flush_and_reset() {
     printf("%d,%d,%d,%d,", general_statistics->words,
            general_statistics->periods, general_statistics->question_marks,
            general_statistics->exclamations);
+
     // print out the basics
-    for (int i = 0; i < cat_index; i = i + 1) {
+    for (i = 0; i < cat_index; i = i + 1) {
         printf("%d", cat_counts[i].count);
         if (i < (cat_index - 1)) {
             printf(",");
         }
 
+        // as we print each category, we'll reset the total count
         cat_counts[i].count = 0;
     }
+
+    // After we've printed everything, we'll reset the general stats and the counts for each word
     memset(general_statistics, 0, sizeof(word_stats));
-    for (int i = 0; i < unique_word_count; i = i + 1) {
+    for (i = 0; i < unique_word_count; i = i + 1) {
         word_tags[i]->count = 0;
     }
 
@@ -469,9 +487,6 @@ void flush_and_reset() {
 // main executes the main program loop. we're initializing the the
 // dictionary data structure and reading stdin for all of the words
 int main(int argc, char **argv) {
-    read_opts(argc, argv);
-    init();
-
     char word_buf[MAX_WORD_SIZE];
     int scan_amt = 0;
     char *current_word = NULL;
@@ -481,6 +496,9 @@ int main(int argc, char **argv) {
     int matched_word_count = 0;
     word_tag *t = NULL;
     cat_link *n = NULL;
+
+    read_opts(argc, argv);
+    init();
 
     // At this point, all of the initialization is complete. We'll
     // scan stdin word by workd and do lookups in our sorted array. If
@@ -496,10 +514,11 @@ int main(int argc, char **argv) {
 
         t = (word_tag *)find_word(word_tags, unique_word_count, current_word);
         if (t != NULL) {
+            // The word that we scanned watched something in our dictionary.
             matched_word_count++;
             t->count++;
 
-            // loop through the linked list
+            // loop through the linked list in increm the categories associated with the word
             n = (cat_link *)t->cats;
             do {
                 n->cat_count_p->count++;
