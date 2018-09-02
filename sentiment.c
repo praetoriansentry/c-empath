@@ -413,14 +413,16 @@ void show_usage(char **argv) {
 // into various globals
 void read_opts(int argc, char **argv) {
     int c;
-    // extern char *optarg;
-    while ((c = getopt(argc, argv, "vc:")) != -1) {
+    while ((c = getopt(argc, argv, "nvc:")) != -1) {
         switch (c) {
         case 'c':
             category_data_file = optarg;
             break;
         case 'v':
             verbose_mode = 1;
+            break;
+        case 'n':
+            first_flush = 0;
             break;
         default:
             show_usage(argv);
@@ -432,15 +434,6 @@ void read_opts(int argc, char **argv) {
 // flush_and_reset will output the current stats of the process and
 // reset the counters.
 void flush_and_reset() {
-    for (int i = 0; i < unique_word_count; i = i + 1) {
-        cat_link *n = (cat_link *)word_tags[i]->cats;
-        do {
-            n->cat_count_p->count += word_tags[i]->count;
-            word_tags[i]->count = 0;
-            n = (cat_link *)n->next;
-        } while (n != NULL);
-    }
-
     if (first_flush == 1) {
         printf("words,periods,question_marks,exclamations,");
         for (int i = 0; i < cat_index; i = i + 1) {
@@ -466,6 +459,10 @@ void flush_and_reset() {
         cat_counts[i].count = 0;
     }
     memset(general_statistics, 0, sizeof(word_stats));
+    for (int i = 0; i < unique_word_count; i = i + 1) {
+        word_tags[i]->count = 0;
+    }
+
     printf("\n");
 }
 
@@ -483,6 +480,7 @@ int main(int argc, char **argv) {
     int scanned_word_count = 0;
     int matched_word_count = 0;
     word_tag *t = NULL;
+    cat_link *n = NULL;
 
     // At this point, all of the initialization is complete. We'll
     // scan stdin word by workd and do lookups in our sorted array. If
@@ -500,6 +498,13 @@ int main(int argc, char **argv) {
         if (t != NULL) {
             matched_word_count++;
             t->count++;
+
+            // loop through the linked list
+            n = (cat_link *)t->cats;
+            do {
+                n->cat_count_p->count++;
+                n = (cat_link *)n->next;
+            } while (n != NULL);
         }
 
         scan_amt = scanf("%s", word_buf);
