@@ -41,6 +41,7 @@ typedef struct {
     int periods;
     int question_marks;
     int exclamations;
+    int matches;
 } word_stats;
 
 // first_flush is used to indicate that we haven't flushed anything to
@@ -455,10 +456,12 @@ void read_opts(int argc, char **argv) {
 void flush_and_reset() {
     int i = 0;
     int total_matches = 0;
+    double match_rate = 0;
+
     // if this is the first flush, we'll spit out a header row for our CSV of
     // data
     if (first_flush == 1) {
-        printf("words,periods,question_marks,exclamations,total_matches,");
+        printf("words,periods,question_marks,exclamations,matches,match_rate,");
         for (i = 0; i < cat_index; i = i + 1) {
             printf("%s", cat_counts[i].category);
             if (i < (cat_index - 1)) {
@@ -474,9 +477,14 @@ void flush_and_reset() {
         total_matches += cat_counts[i].count;
     }
 
-    printf("%d,%d,%d,%d,%d,", general_statistics->words,
-           general_statistics->periods, general_statistics->question_marks,
-           general_statistics->exclamations, total_matches);
+    match_rate = ((double)general_statistics->matches) /
+                 ((double)general_statistics->words);
+    printf("%d,", general_statistics->words);
+    printf("%d,", general_statistics->periods);
+    printf("%d,", general_statistics->question_marks);
+    printf("%d,", general_statistics->exclamations);
+    printf("%d,", general_statistics->matches);
+    printf("%.4f,", match_rate);
 
     // print out the basics
     for (i = 0; i < cat_index; i = i + 1) {
@@ -539,6 +547,7 @@ int main(int argc, char **argv) {
         if (t != NULL) {
             // The word that we scanned watched something in our dictionary.
             matched_word_count++;
+            general_statistics->matches++;
             t->count++;
 
             // loop through the linked list in increm the categories associated
