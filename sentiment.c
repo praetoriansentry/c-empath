@@ -422,7 +422,14 @@ void track_stats(char *word) {
 
 // show_usage is supposed to give an example of how to use this program
 void show_usage(char **argv) {
-    printf("%s -c categories.tsv\n", argv[0]);
+    printf("Text Analysis Tool\n\n");
+    printf("Basic Usage:\n");
+    printf("\t%s < some-text-data.txt\n\n",argv[0]);
+    printf("Other Options\n\n");
+    printf("\t%s -v -c [category.tsv] -h -n\n",argv[0]);
+    printf("\t-c\tprovide a TSV file to use as the dictionary\n");
+    printf("\t-v\tVerbose mode to output additional options\n");
+    printf("\t-n\tNormalize output instead of raw counts\n");
     return;
 }
 
