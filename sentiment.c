@@ -35,6 +35,7 @@ typedef struct {
     cat_link *cats;
 } word_tag;
 
+// word_stats is used to track the overal stats for the input.
 typedef struct {
     int words;
     int periods;
@@ -74,6 +75,10 @@ word_stats *general_statistics = NULL;
 
 // verbose_mode is a flag to deterine if we should dump out extra information
 int verbose_mode = 0;
+
+// is_normalized is used to determine if the output values should be
+// normalized rather than outputting the raw values
+int is_normalized = 0;
 
 // get_line will read a line of MAX_LINE_LENGTH from the provided file
 char *get_line(FILE *s) {
@@ -424,7 +429,7 @@ void show_usage(char **argv) {
 // into various globals
 void read_opts(int argc, char **argv) {
     int c;
-    while ((c = getopt(argc, argv, "nvc:")) != -1) {
+    while ((c = getopt(argc, argv, "hnvc:")) != -1) {
         switch (c) {
         case 'c':
             category_data_file = optarg;
@@ -432,8 +437,11 @@ void read_opts(int argc, char **argv) {
         case 'v':
             verbose_mode = 1;
             break;
-        case 'n':
+        case 'h':
             first_flush = 0;
+            break;
+        case 'n':
+            is_normalized = 1;
             break;
         default:
             show_usage(argv);
@@ -446,10 +454,11 @@ void read_opts(int argc, char **argv) {
 // reset the counters.
 void flush_and_reset() {
     int i = 0;
+    int total_matches = 0;
     // if this is the first flush, we'll spit out a header row for our CSV of
     // data
     if (first_flush == 1) {
-        printf("words,periods,question_marks,exclamations,");
+        printf("words,periods,question_marks,exclamations,total_matches,");
         for (i = 0; i < cat_index; i = i + 1) {
             printf("%s", cat_counts[i].category);
             if (i < (cat_index - 1)) {
@@ -460,13 +469,26 @@ void flush_and_reset() {
         printf("\n");
     }
 
-    printf("%d,%d,%d,%d,", general_statistics->words,
+    // Count the total number of matches
+    for (i = 0; i < cat_index; i = i + 1) {
+        total_matches += cat_counts[i].count;
+    }
+
+    printf("%d,%d,%d,%d,%d,", general_statistics->words,
            general_statistics->periods, general_statistics->question_marks,
-           general_statistics->exclamations);
+           general_statistics->exclamations, total_matches);
 
     // print out the basics
     for (i = 0; i < cat_index; i = i + 1) {
-        printf("%d", cat_counts[i].count);
+        // if we're normalizing we'll output the count divided by the
+        // total number of matches. Otherwise we just output the count
+        if (is_normalized == 1 && total_matches > 0) {
+            printf("%.8f",
+                   ((double)cat_counts[i].count) / ((double)total_matches));
+        } else {
+            printf("%d", cat_counts[i].count);
+        }
+
         if (i < (cat_index - 1)) {
             printf(",");
         }
