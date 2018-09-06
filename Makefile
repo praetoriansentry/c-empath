@@ -18,3 +18,7 @@ books:
 	mkdir books
 	cd books && cat ../books_temp/* | grep 'Plain Text UTF-8' | sed 's#^.*a href="\([^"]*\)".*$$#https:\1#g' | sort | uniq | xargs wget
 	$(RM) -rf books_temp
+
+install: all
+	mkdir -p $(HOME)/.local/bin
+	cp $(BIN) $(HOME)/.local/bin 
