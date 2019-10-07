@@ -107,3 +107,14 @@ data into the text analysis tool.
 #+BEGIN_SRC
 cat data/News_Category_Dataset.json | jq -r '.short_description + "\u001c"' | ./sentiment
 #+END_SRC
+
+* Example with CSV
+
+In this example, I'm using AWK to parse the 5th column out of a CSV
+file and add the record seperator to the end of each entry in the
+CSV. That data is then passed into sentiment for analysis and it will
+print out an analysis for each line in the CSV
+
+#+BEGIN_SRC
+cat data.csv | awk -F "\"*,\"*" '{print $5 "\x1c"}' | ./sentiment
+#+END_SRC
