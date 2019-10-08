@@ -116,5 +116,5 @@ CSV. That data is then passed into sentiment for analysis and it will
 print out an analysis for each line in the CSV
 
 #+BEGIN_SRC
-cat data.csv | awk -F "\"*,\"*" '{print $5 "\x1c"}' | ./sentiment
+csvtool format "%(5)$(printf '\x1c')" data.csv | ./sentiment -n
 #+END_SRC
